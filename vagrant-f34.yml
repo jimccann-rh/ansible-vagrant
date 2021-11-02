@@ -5,7 +5,7 @@
 
   pre_tasks:
 
-    - name: check if VT enabled
+    - name: Check if VT enabled
       command: lscpu
       become: yes
       register: VT
@@ -19,7 +19,7 @@
  
   tasks:
 
-    - name: installing packages
+    - name: Installing packages
       package:
         name: "{{ item }}"
         state: present
@@ -38,7 +38,7 @@
         enabled: yes
       become: yes
 
-    - name: installing packages
+    - name: Installing packages
       package:
         name: "{{ item }}"
         state: present
@@ -46,11 +46,11 @@
       with_items:
         - vagrant
 
-    - name: vagrant plugin install vagrant-libvirt
+    - name: Vagrant plugin install vagrant-libvirt
       command: vagrant plugin install vagrant-libvirt
       become: yes
 
-    - name: Creating a file with content
+    - name: Creating a vagrantfile 
       copy:
         dest: Vagrantfile
         content: |
@@ -58,7 +58,7 @@
             config.vm.box = "fedora/34-cloud-base"
           end
 
-    - name: vagrant status 
+    - name: Vagrant status 
       command: vagrant status
       register: VGS
 
@@ -73,7 +73,7 @@
         msg: "vagrant not created"
 
 
-    - name: vagrant up
+    - name: Vagrant up
       command: vagrant up
       register: VGU
  
@@ -87,7 +87,7 @@
         msg: "{{VGU.stdout_lines}}"
         verbosity: 1
 
-    - name: vagrant destroy
+    - name: Vagrant destroy
       command: vagrant destroy -f
       register: VGD
 
