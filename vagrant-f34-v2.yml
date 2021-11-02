@@ -1,0 +1,98 @@
+---
+- hosts: localhost
+  vars:
+    data: ""
+
+  pre_tasks:
+
+    - name: Check if VT enabled
+      command: lscpu
+      become: yes
+      register: VT
+      changed_when: false
+
+    - assert:
+        that:
+          - "ansible_os_family == 'RedHat'"
+          - "VT.stdout.find('VT-x')"
+        msg: "'VT needs to be enabled and/or a Red Hat Distro"
+ 
+  tasks:
+
+    - name: Installing packages
+      package:
+        name: "{{ item }}"
+        state: present
+      become: yes
+      with_items:
+        - vagrant-libvirt 
+        - rsync
+
+    - name: Make sure libvirtd service unit is running
+      ansible.builtin.systemd:
+        state: started
+        name: libvirtd
+        enabled: yes
+      become: yes
+
+    - name: Installing packages
+      package:
+        name: "{{ item }}"
+        state: present
+      become: yes
+      with_items:
+        - vagrant
+
+    - name: Vagrant plugin install vagrant-libvirt
+      command: vagrant plugin install vagrant-libvirt
+      become: yes
+
+    - name: Creating a vagrantfile 
+      copy:
+        dest: Vagrantfile
+        content: |
+          Vagrant.configure("2") do |config|
+            config.vm.box = "fedora/34-cloud-base"
+          end
+
+    - name: Vagrant status 
+      command: vagrant status
+      register: VGS
+
+
+    - debug:
+        msg: "{{VGS.stdout_lines}}"
+        verbosity: 1
+
+    - assert:
+        that:
+          - "VGS.stdout.find('not created')"
+        msg: "vagrant not created"
+
+
+    - name: Vagrant up
+      command: vagrant up
+      register: VGU
+ 
+    - assert:
+        that:
+          - "VGU.stdout.find('running')"
+        msg: "vagrant RUNNING"
+
+
+    - debug:
+        msg: "{{VGU.stdout_lines}}"
+        verbosity: 1
+
+    - name: Vagrant destroy
+      command: vagrant destroy -f
+      register: VGD
+
+    - assert:
+        that:
+          - "VGD.stdout.find('Removing domain')"
+        msg: "vagrant image destroyed"
+
+
+
+ 
